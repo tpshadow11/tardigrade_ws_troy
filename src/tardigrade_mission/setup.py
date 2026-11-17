@@ -23,6 +23,7 @@ setup(
         'console_scripts': [
             'prequal_test = tardigrade_mission.prequal_test:main',
             'qual_test = tardigrade_mission.qual_test:main',
+            'starter_tree = tardigrade_mission.starter_tree:main',
         ],
     },
 )

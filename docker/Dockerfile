@@ -50,7 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tmux \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir pyserial
+RUN pip3 install --no-cache-dir pyserial py_trees==2.1.6
 
 WORKDIR /ws
 
