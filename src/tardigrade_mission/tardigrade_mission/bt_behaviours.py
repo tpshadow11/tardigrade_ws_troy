@@ -246,3 +246,98 @@ def create_starter_tree(vehicle, depth_m=1.0, distance_m=3.0, speed=0.2,
     return py_trees.composites.Sequence(
         'Starter mission', memory=True,
         children=[wait_for_odometry, RecordStart(vehicle), safety])
+
+
+class DriveBackward(DriveLeg):
+    """Reverse distance_m while still facing (start heading + offset)."""
+
+    def done(self):
+        x, y, _, _ = self.vehicle.pose()
+        heading = self.target_yaw(self.heading_offset)
+        along = ((x - self.leg_x) * math.cos(heading)
+                 + (y - self.leg_y) * math.sin(heading))
+        # Going backward makes "along" negative.
+        return along <= -self.distance_m
+
+    def command(self):
+        heading = self.target_yaw(self.heading_offset)
+        return -self.speed, 0.0, self.hold_heading(heading)
+
+
+class Surface(py_trees.behaviour.Behaviour):
+    """Push up for a fixed time. Uses only the clock, not odometry.
+
+    It must still work when odometry is lost, because lost odometry is
+    one of the reasons we would want to surface.
+    """
+
+    def __init__(self, vehicle, seconds=10.0, heave=0.2, name='Surface'):
+        super().__init__(name)
+        self.vehicle = vehicle
+        self.seconds = seconds
+        self.heave = abs(heave)
+        self.end_time = None
+
+    def initialise(self):
+        self.end_time = self.vehicle.now() + self.seconds
+
+    def update(self):
+        if self.vehicle.now() >= self.end_time:
+            self.vehicle.stop()
+            return Status.SUCCESS
+        self.vehicle.command(0.0, self.heave, 0.0)
+        return Status.RUNNING
+
+    def terminate(self, new_status):
+        if new_status != Status.SUCCESS:
+            self.vehicle.stop()
+
+
+def create_safe_tree(vehicle, **mission_args):
+    """Try the starter mission. If it fails for any reason, surface."""
+    return py_trees.composites.Selector(
+        'Mission, else surface', memory=True, children=[
+            create_starter_tree(vehicle, **mission_args),
+            Surface(vehicle),
+        ])
+
+
+def create_playground_tree(vehicle, depth_m=0.5, distance_m=2.0, speed=0.2,
+                           leg_timeout_sec=60.0, odometry_timeout_sec=0.5):
+    """A sandbox tree: forward, backward, turn left 90, forward.
+
+    Change the list inside 'Moves' to try your own ideas.
+    """
+    moves = py_trees.composites.Sequence('Moves', memory=True, children=[
+        leg(Descend(vehicle, depth_m), leg_timeout_sec),
+        HoldStill(vehicle, 2.0),
+        leg(DriveLeg(vehicle, distance_m, 0.0, speed, name='Forward'),
+            leg_timeout_sec),
+        HoldStill(vehicle, 2.0),
+        leg(DriveBackward(vehicle, distance_m, 0.0, speed, name='Backward'),
+            leg_timeout_sec),
+        HoldStill(vehicle, 2.0),
+        leg(TurnTo(vehicle, math.pi / 2, name='Turn left 90'),
+            leg_timeout_sec),
+        HoldStill(vehicle, 2.0, math.pi / 2),
+        leg(DriveLeg(vehicle, distance_m, math.pi / 2, speed,
+                     name='Forward again'),
+            leg_timeout_sec),
+        HoldStill(vehicle, 2.0, math.pi / 2),
+    ])
+    mission = py_trees.composites.Sequence(
+        'Playground', memory=True, children=[
+            py_trees.decorators.Timeout(
+                name='Wait for odometry (max 30 s)', duration=30.0,
+                child=py_trees.decorators.FailureIsRunning(
+                    OdometryFresh(vehicle, odometry_timeout_sec))),
+            RecordStart(vehicle),
+            py_trees.decorators.EternalGuard(
+                name='Safety: odometry still fresh?',
+                condition=lambda: (
+                    vehicle.odometry_age() <= odometry_timeout_sec),
+                child=moves),
+        ])
+    return py_trees.composites.Selector(
+        'Playground, else surface', memory=True,
+        children=[mission, Surface(vehicle)])

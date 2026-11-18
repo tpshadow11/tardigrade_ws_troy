@@ -14,7 +14,14 @@ from geometry_msgs.msg import TwistStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 
-from tardigrade_mission.bt_behaviours import create_starter_tree
+from tardigrade_mission.bt_behaviours import (
+    create_playground_tree, create_safe_tree, create_starter_tree)
+
+TREES = {
+    'starter': create_starter_tree,
+    'safe': create_safe_tree,
+    'playground': create_playground_tree,
+}
 
 
 def yaw_from_quaternion(q):
@@ -82,12 +89,16 @@ class StarterTreeNode(Node):
         self.declare_parameter('distance_m', 3.0)
         self.declare_parameter('speed', 0.2)
         self.declare_parameter('tick_hz', 10.0)
+        self.declare_parameter('tree', 'starter')
 
         self.vehicle = RosVehicle(
             self,
             str(self.get_parameter('odometry_topic').value),
             str(self.get_parameter('command_topic').value))
-        root = create_starter_tree(
+        tree_name = str(self.get_parameter('tree').value)
+        if tree_name not in TREES:
+            raise ValueError(f'tree must be one of {sorted(TREES)}')
+        root = TREES[tree_name](
             self.vehicle,
             depth_m=float(self.get_parameter('depth_m').value),
             distance_m=float(self.get_parameter('distance_m').value),
