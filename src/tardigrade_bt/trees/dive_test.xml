@@ -45,6 +45,9 @@
             </Timeout>
             <Hold seconds="5"/>
             <Timeout msec="60000">
+              <Forward distance_m="1.0"/>
+            </Timeout>
+            <Timeout msec="60000">
               <GoToDepth name="Back to start depth"
                          depth_m="0.0"/>
             </Timeout>
@@ -60,6 +63,13 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Action ID="Forward">
+      <input_port name="distance_m">Metres to travel</input_port>
+      <input_port name="speed"
+                  default="0.2">m/s</input_port>
+      <input_port name="heading_deg"
+                  default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
     <Action ID="GoToDepth">
       <input_port name="depth_m">Metres below the start depth</input_port>
       <input_port name="tolerance_m"
