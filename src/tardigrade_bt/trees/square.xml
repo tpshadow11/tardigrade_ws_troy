@@ -34,4 +34,56 @@
       </Sequence>
     </Fallback>
   </BehaviorTree>
+  <!-- Node list for Groot2 (same as tardigrade_nodes.xml). -->
+  <TreeNodesModel>
+    <Action ID="WaitForOdometry">
+      <input_port name="timeout_sec" default="30">Fail if no odometry arrives within this many seconds</input_port>
+      <input_port name="max_age_sec" default="0.5">Odometry older than this counts as missing</input_port>
+    </Action>
+    <Action ID="RecordStart">
+    </Action>
+    <Condition ID="OdometryFresh">
+      <input_port name="max_age_sec" default="0.5">Odometry older than this counts as stale</input_port>
+    </Condition>
+    <Condition ID="IsArmed">
+    </Condition>
+    <Action ID="GoToDepth">
+      <input_port name="depth_m">Metres below the start depth</input_port>
+      <input_port name="tolerance_m" default="0.05">Close enough, in metres</input_port>
+      <input_port name="max_speed" default="0.2">Vertical speed limit, m/s</input_port>
+      <input_port name="heading_deg" default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
+    <Action ID="Forward">
+      <input_port name="distance_m">Metres to travel</input_port>
+      <input_port name="speed" default="0.2">m/s</input_port>
+      <input_port name="heading_deg" default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
+    <Action ID="Backward">
+      <input_port name="distance_m">Metres to travel</input_port>
+      <input_port name="speed" default="0.2">m/s</input_port>
+      <input_port name="heading_deg" default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
+    <Action ID="StrafeLeft">
+      <input_port name="distance_m">Metres to travel sideways</input_port>
+      <input_port name="speed" default="0.2">m/s</input_port>
+      <input_port name="heading_deg" default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
+    <Action ID="StrafeRight">
+      <input_port name="distance_m">Metres to travel sideways</input_port>
+      <input_port name="speed" default="0.2">m/s</input_port>
+      <input_port name="heading_deg" default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
+    <Action ID="Turn">
+      <input_port name="heading_deg">Heading to face, degrees left of the start heading</input_port>
+      <input_port name="tolerance_deg" default="4">Close enough, in degrees</input_port>
+    </Action>
+    <Action ID="Hold">
+      <input_port name="seconds" default="2">How long to hold position</input_port>
+      <input_port name="heading_deg" default="0">Heading to hold, degrees left of the start heading</input_port>
+    </Action>
+    <Action ID="Surface">
+      <input_port name="seconds" default="10">How long to rise</input_port>
+      <input_port name="speed" default="0.2">Upward speed, m/s</input_port>
+    </Action>
+  </TreeNodesModel>
 </root>
