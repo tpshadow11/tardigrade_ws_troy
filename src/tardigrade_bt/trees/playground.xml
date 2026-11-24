@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Playground: dive, forward, backward, turn left, forward again.
+  Change the moves inside "Moves" to try your own ideas.
+
+  Shape (the same safety pattern is used in every tree):
+    Fallback "Mission, else surface"   try the mission; if it fails, surface
+      Sequence "Mission"
+        WaitForOdometry                wait until position data arrives
+        RecordStart                    remember where we started
+        ReactiveSequence "Safety"      re-checks the first two EVERY tick
+          OdometryFresh                  stop if position data goes stale
+          IsArmed                        stop if someone disarms
+          Sequence "Moves"               the actual mission, one step at a time
+      Sequence "Surface, then report failure"
+
+  Headings are degrees LEFT of the start heading. Timeouts are milliseconds.
+-->
+<root BTCPP_format="4" main_tree_to_execute="Playground">
+  <BehaviorTree ID="Playground">
+    <Fallback name="Mission, else surface">
+      <Sequence name="Mission">
+        <WaitForOdometry timeout_sec="30"/>
+        <RecordStart/>
+        <ReactiveSequence name="Safety">
+          <OdometryFresh max_age_sec="0.5"/>
+          <IsArmed/>
+          <Sequence name="Moves">
+            <Timeout msec="60000">
+              <GoToDepth name="Dive 0.5 m" depth_m="0.5"/>
+            </Timeout>
+            <Hold seconds="2"/>
+            <Timeout msec="60000">
+              <Forward name="Forward 2 m" distance_m="2.0"/>
+            </Timeout>
+            <Hold seconds="2"/>
+            <Timeout msec="60000">
+              <Backward name="Backward 2 m" distance_m="2.0"/>
+            </Timeout>
+            <Hold seconds="2"/>
+            <Timeout msec="60000">
+              <Turn name="Turn left 90" heading_deg="90"/>
+            </Timeout>
+            <Hold seconds="2" heading_deg="90"/>
+            <Timeout msec="60000">
+              <Forward name="Forward again" distance_m="2.0" heading_deg="90"/>
+            </Timeout>
+            <Hold seconds="2" heading_deg="90"/>
+          </Sequence>
+        </ReactiveSequence>
+      </Sequence>
+      <Sequence name="Surface, then report failure">
+        <Surface seconds="10"/>
+        <AlwaysFailure/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+</root>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  Square: dive, then four 2 m sides, turning left 90 degrees at each corner.
+  Ends back at the start, facing the start heading.
+  Same safety pattern as playground.xml.
+-->
+<root BTCPP_format="4" main_tree_to_execute="Square">
+  <BehaviorTree ID="Square">
+    <Fallback name="Mission, else surface">
+      <Sequence name="Mission">
+        <WaitForOdometry timeout_sec="30"/>
+        <RecordStart/>
+        <ReactiveSequence name="Safety">
+          <OdometryFresh max_age_sec="0.5"/>
+          <IsArmed/>
+          <Sequence name="Moves">
+            <Timeout msec="60000"><GoToDepth name="Dive 0.5 m" depth_m="0.5"/></Timeout>
+            <Hold seconds="2"/>
+            <Timeout msec="60000"><Forward name="Side 1" distance_m="2.0" heading_deg="0"/></Timeout>
+            <Timeout msec="60000"><Turn name="Corner 1" heading_deg="90"/></Timeout>
+            <Timeout msec="60000"><Forward name="Side 2" distance_m="2.0" heading_deg="90"/></Timeout>
+            <Timeout msec="60000"><Turn name="Corner 2" heading_deg="180"/></Timeout>
+            <Timeout msec="60000"><Forward name="Side 3" distance_m="2.0" heading_deg="180"/></Timeout>
+            <Timeout msec="60000"><Turn name="Corner 3" heading_deg="270"/></Timeout>
+            <Timeout msec="60000"><Forward name="Side 4" distance_m="2.0" heading_deg="270"/></Timeout>
+            <Timeout msec="60000"><Turn name="Face start" heading_deg="0"/></Timeout>
+            <Hold seconds="2"/>
+          </Sequence>
+        </ReactiveSequence>
+      </Sequence>
+      <Sequence name="Surface, then report failure">
+        <Surface seconds="10"/>
+        <AlwaysFailure/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+</root>

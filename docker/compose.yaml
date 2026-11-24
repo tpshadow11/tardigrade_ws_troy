@@ -16,6 +16,9 @@ services:
       - ${FOXGLOVE_PORT:-8765}:8765
       - ${FOXGLOVE_PORT:-28765}:28765
       - "${ROS_TCP_PORT:-10000}:10000"
+      # Groot2 live view of a running behavior tree (tardigrade_bt).
+      - "1667:1667"
+      - "1668:1668"
     volumes:
       - ${WORKSPACE:-..}:/ws
     command: bash

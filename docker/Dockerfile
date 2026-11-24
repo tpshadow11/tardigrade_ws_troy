@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgles2-mesa-dev \
     liblapack-dev \
     libturbojpeg \
+    libzmq3-dev \
     libusb-1.0-0-dev \
     nano \
     nlohmann-json3-dev \
@@ -51,6 +52,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir pyserial py_trees==2.1.6
+
+# BehaviorTree.CPP 4.x for tardigrade_bt. ROS 2 Foxy has no binary package
+# for v4, so build the pinned release from source into /usr/local. ZeroMQ
+# (libzmq3-dev above) enables the Groot2 live view.
+ARG BTCPP_VERSION=4.6.2
+RUN git clone --depth 1 --branch ${BTCPP_VERSION} \
+        https://github.com/BehaviorTree/BehaviorTree.CPP.git /tmp/btcpp \
+    && cmake -S /tmp/btcpp -B /tmp/btcpp/build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBTCPP_UNIT_TESTS=OFF \
+        -DBTCPP_EXAMPLES=OFF \
+        -DBTCPP_BUILD_TOOLS=OFF \
+        -DBTCPP_SQLITE_LOGGING=OFF \
+    && cmake --build /tmp/btcpp/build -j"$(nproc)" \
+    && cmake --install /tmp/btcpp/build \
+    && ldconfig \
+    && rm -rf /tmp/btcpp
 
 WORKDIR /ws
 

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  Dive test: the smallest useful mission. Dive 0.5 m, hold, come back up to
+  the start depth. It never drives or turns, so it is the best first test in
+  Unity while the yaw estimate bug (CTL-01 / CTL-02) is open.
+-->
+<root BTCPP_format="4" main_tree_to_execute="DiveTest">
+  <BehaviorTree ID="DiveTest">
+    <Fallback name="Mission, else surface">
+      <Sequence name="Mission">
+        <WaitForOdometry timeout_sec="30"/>
+        <RecordStart/>
+        <ReactiveSequence name="Safety">
+          <OdometryFresh max_age_sec="0.5"/>
+          <IsArmed/>
+          <Sequence name="Moves">
+            <Timeout msec="60000"><GoToDepth name="Dive 0.5 m" depth_m="0.5"/></Timeout>
+            <Hold seconds="5"/>
+            <Timeout msec="60000"><GoToDepth name="Back to start depth" depth_m="0.0"/></Timeout>
+          </Sequence>
+        </ReactiveSequence>
+      </Sequence>
+      <Sequence name="Surface, then report failure">
+        <Surface seconds="10"/>
+        <AlwaysFailure/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+</root>
