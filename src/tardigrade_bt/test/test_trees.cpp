@@ -33,6 +33,7 @@ public:
     return odometry_ok ? 0.0 : std::numeric_limits<double>::infinity();
   }
   bool armed() const override {return is_armed;}
+  bool hasStatus() const override {return status_ok;}
   Pose pose() const override {return p;}
   double yawRate() const override {return rate;}
 
@@ -69,6 +70,7 @@ public:
   std::array<double, 4> last{0.0, 0.0, 0.0, 0.0};
   bool odometry_ok{true};
   bool is_armed{true};
+  bool status_ok{true};
   bool stuck{false};
   bool saw_surface_command{false};
 };
@@ -163,6 +165,19 @@ TEST_F(TreeTest, NeverArmedMeansNothingMoves)
   EXPECT_EQ(run(tree, vehicle, 5000), BT::NodeStatus::FAILURE);
   EXPECT_NEAR(vehicle.p.x, 0.0, 1e-9);
   EXPECT_NEAR(vehicle.p.y, 0.0, 1e-9);
+}
+
+TEST_F(TreeTest, WaitsForFirstStatusBeforeCheckingArmed)
+{
+  // In ROS the status message can arrive after odometry. Until it does,
+  // "armed" is only a default, so the mission must wait instead of failing.
+  vehicle.status_ok = false;
+  auto tree = factory.createTreeFromFile(treeFile("dive_test"));
+  const auto status = run(
+    tree, vehicle, 2000, [this](int tick) {
+      if (tick == 20) {vehicle.status_ok = true;}
+    });
+  EXPECT_EQ(status, BT::NodeStatus::SUCCESS);
 }
 
 TEST_F(TreeTest, StuckLegTimesOutAndStops)

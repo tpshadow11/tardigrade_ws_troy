@@ -33,6 +33,9 @@ public:
   virtual double odometryAge() const = 0;
   // True when the robot reports that it is armed. Trees never arm the robot.
   virtual bool armed() const = 0;
+  // True once at least one robot status message has arrived. Until then
+  // armed() is only a default, so WaitForOdometry waits for this too.
+  virtual bool hasStatus() const {return true;}
   virtual Pose pose() const = 0;
   // Body yaw rate in rad/s (positive = turning left).
   virtual double yawRate() const = 0;

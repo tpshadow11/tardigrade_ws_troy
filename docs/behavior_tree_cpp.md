@@ -57,7 +57,9 @@ control, arm, set the mux to `mission` (see `docs/unity_sil.md`), then:
 ros2 launch tardigrade_bt bt_mission.launch.py tree:=dive_test dry_run:=false
 ```
 
-`tree` is a name from `trees/` or a full path to any XML file. The runner
+`tree` is a name from `trees/` or a full path to any XML file. If the file
+holds several trees (Groot2 saves new trees into the open file), pick one
+with `main_tree:=<tree ID>`, for example `tree:=dive_test main_tree:=MyFirst`. The runner
 prints each step as it starts and ends:
 
 ```text
@@ -101,7 +103,7 @@ robot had at `RecordStart`. Depth is metres below the start depth.
 
 | Node | Kind | Ports (XML attributes) | Succeeds when |
 |---|---|---|---|
-| `WaitForOdometry` | action | `timeout_sec`=30, `max_age_sec`=0.5 | odometry arrives (fails after timeout) |
+| `WaitForOdometry` | action | `timeout_sec`=30, `max_age_sec`=0.5 | odometry and the first robot status arrive (fails after timeout) |
 | `RecordStart` | action | | start pose saved (fails with no odometry) |
 | `OdometryFresh` | condition | `max_age_sec`=0.5 | odometry is recent |
 | `IsArmed` | condition | | `/tardigrade/status` says armed |

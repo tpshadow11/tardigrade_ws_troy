@@ -61,6 +61,7 @@ public:
     status_sub_ = node.create_subscription<tardigrade_interfaces::msg::RobotStatus>(
       status_topic, 10, [this](tardigrade_interfaces::msg::RobotStatus::ConstSharedPtr message) {
         armed_ = message->armed;
+        has_status_ = true;
       });
   }
 
@@ -72,6 +73,7 @@ public:
   }
 
   bool armed() const override {return armed_;}
+  bool hasStatus() const override {return has_status_;}
   Pose pose() const override {return pose_;}
   double yawRate() const override {return yaw_rate_;}
 
@@ -97,6 +99,7 @@ private:
   double odometry_time_{0.0};
   bool has_odometry_{false};
   bool armed_{false};
+  bool has_status_{false};
 };
 
 // Prints and publishes "<node name>: <STATUS>" for actions and conditions,

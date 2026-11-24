@@ -139,7 +139,11 @@ public:
 
   BT::NodeStatus onRunning() override
   {
-    if (vehicle_->odometryAge() <= portOr(*this, "max_age_sec", 0.5)) {
+    // Also wait for the first robot status, so IsArmed right after this
+    // node sees the real arming state instead of the "not armed" default.
+    if (vehicle_->odometryAge() <= portOr(*this, "max_age_sec", 0.5) &&
+      vehicle_->hasStatus())
+    {
       return BT::NodeStatus::SUCCESS;
     }
     return vehicle_->now() >= end_time_ ? BT::NodeStatus::FAILURE : BT::NodeStatus::RUNNING;
