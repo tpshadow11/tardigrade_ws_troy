@@ -148,6 +148,7 @@ public:
   : rclcpp::Node("mission_runner")
   {
     const auto tree_name = declare_parameter<std::string>("tree", "playground");
+    const auto main_tree = declare_parameter<std::string>("main_tree", "");
     dry_run_ = declare_parameter<bool>("dry_run", true);
     const auto tick_hz = declare_parameter<double>("tick_hz", 10.0);
     const auto odometry_topic = declare_parameter<std::string>(
@@ -163,7 +164,15 @@ public:
 
     const auto path = resolveTreePath(tree_name);
     RCLCPP_INFO(get_logger(), "Loading tree file %s", path.c_str());
-    tree_ = factory_.createTreeFromFile(path);
+    if (main_tree.empty()) {
+      tree_ = factory_.createTreeFromFile(path);
+    } else {
+      // A file can hold several trees (Groot2 saves new trees into the open
+      // file). main_tree picks one by its ID instead of the file's main tree.
+      factory_.registerBehaviorTreeFromFile(path);
+      RCLCPP_INFO(get_logger(), "Running tree %s", main_tree.c_str());
+      tree_ = factory_.createTree(main_tree);
+    }
     RCLCPP_INFO(get_logger(), "Tree structure:");
     BT::printTreeRecursively(tree_.rootNode());
 
